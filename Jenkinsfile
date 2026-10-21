@@ -1,21 +1,76 @@
-pipeline{
+
+pipeline {
     agent any
 
     tools {
-         maven 'maven'
-         jdk 'java'
+        jdk 'java'
+        maven 'maven'
     }
 
-    stages{
-        stage('checkout'){
-            steps{
-                checkout([$class: 'GitSCM', branches: [[name: '*/master']], extensions: [], userRemoteConfigs: [[credentialsId: 'github access', url: 'https://github.com/sreenivas449/java-hello-world-with-maven.git']]])
+    options {
+        skipDefaultCheckout(true)
+    }
+
+    stages {
+        stage('Clean Workspace') {
+            steps {
+                cleanWs()
+                echo 'Workspace cleaned'
             }
         }
-        stage('build'){
-            steps{
-               bat 'mvn package'
+
+        stage('Checkout') {
+            steps {
+                checkout scm
             }
+        }
+
+        stage('Check Tools') {
+            steps {
+                sh 'java -version'
+                sh 'mvn -version'
+            }
+        }
+
+        stage('Clean') {
+            steps {
+                sh 'mvn clean'
+            }
+        }
+
+        stage('Compile') {
+            steps {
+                sh 'mvn compile'
+            }
+        }
+
+        stage('Test') {
+            steps {
+                sh 'mvn test'
+            }
+        }
+
+        stage('Package') {
+            steps {
+                sh 'mvn package'
+            }
+        }
+    }
+
+    post {
+        always {
+            junit testResults: '**/target/surefire-reports/TEST-*.xml',
+                  allowEmptyResults: true
+        }
+
+        success {
+            archiveArtifacts artifacts: '**/target/*.jar',
+                             fingerprint: true
+            echo 'Build successful!'
+        }
+
+        failure {
+            echo 'Build failed. Check Console Output.'
         }
     }
 }
