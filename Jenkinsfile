@@ -1,76 +1,58 @@
 
 pipeline {
     agent any
-
-    tools {
-        jdk 'java'
-        maven 'maven'
-    }
-
-    options {
-        skipDefaultCheckout(true)
-    }
-
     stages {
-        stage('Clean Workspace') {
+        stage('Clean Workspace')
+        {
             steps {
                 cleanWs()
-                echo 'Workspace cleaned'
+                echo 'Workspace cleaned successfully'
             }
         }
 
-        stage('Checkout') {
+        stage('Checkout') 
+        {
             steps {
-                checkout scm
+                git branch: 'master',
+                    url: 'https://github.com/K-Gayathri123/java-hello-world-with-maven.git'
             }
         }
 
-        stage('Check Tools') {
+        stage('Check Java and Maven')
+        {
             steps {
                 sh 'java -version'
                 sh 'mvn -version'
             }
         }
 
-        stage('Clean') {
+        stage('Clean Build') 
+        {
             steps {
                 sh 'mvn clean'
             }
         }
 
-        stage('Compile') {
+        stage('Compile')
+        {
             steps {
                 sh 'mvn compile'
             }
         }
 
-        stage('Test') {
+        stage('Test') 
+        {
             steps {
                 sh 'mvn test'
             }
         }
 
-        stage('Package') {
+        stage('Package')
+        {
             steps {
                 sh 'mvn package'
             }
         }
     }
 
-    post {
-        always {
-            junit testResults: '**/target/surefire-reports/TEST-*.xml',
-                  allowEmptyResults: true
-        }
-
-        success {
-            archiveArtifacts artifacts: '**/target/*.jar',
-                             fingerprint: true
-            echo 'Build successful!'
-        }
-
-        failure {
-            echo 'Build failed. Check Console Output.'
-        }
-    }
 }
